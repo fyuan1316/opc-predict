@@ -92,5 +92,5 @@ var stopCommand = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(startCommand)
-	rootCmd.AddCommand(stopCommand)
+	//rootCmd.AddCommand(stopCommand)
 }

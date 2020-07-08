@@ -48,7 +48,7 @@ func SetServerIp(p string) OptionFunc {
 func SetTimeout(p int) OptionFunc {
 	return func(spec *Options) {
 		if p < MinTimeout {
-			scopelog.Printf("Options", "predict timeout:%d (ms) is too short, use default %d(ms) instead.", p, MinTimeout)
+			scopelog.Printf("Options", "predict timeout: %d (ms) is too short, use default %d(ms) instead.", p, MinTimeout)
 			p = MinTimeout
 		}
 		spec.PredictTimeout = p
