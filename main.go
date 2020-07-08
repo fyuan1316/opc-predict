@@ -1,6 +1,6 @@
 package main
 
-import "opcdata-predict-client/cmd"
+import "opcdata-predict/cmd"
 
 func main() {
 	cmd.Execute()

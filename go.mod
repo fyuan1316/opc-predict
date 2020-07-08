@@ -1,4 +1,4 @@
-module opcdata-predict-client
+module opcdata-predict
 
 go 1.14
 

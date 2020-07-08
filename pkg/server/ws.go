@@ -4,9 +4,9 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"opcdata-predict-client/cmd/option"
-	"opcdata-predict-client/pkg/kafka"
-	"opcdata-predict-client/pkg/scopelog"
+	"opcdata-predict/cmd/option"
+	"opcdata-predict/pkg/kafka"
+	"opcdata-predict/pkg/scopelog"
 	"sync"
 )
 
@@ -28,6 +28,9 @@ func NewWebSocketManager(opts option.Options) *WebSocketManager {
 var myUpGrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 var scopeWsHandler = "WsHandler"
@@ -77,7 +80,7 @@ func (m *WebSocketManager) CommandHandler(consumerMgr *kafka.MessageCollector) {
 			if state == false {
 				scopelog.Printf(actionRequest, "StartUp Kafka Consumer\n")
 				if err := consumerMgr.CreateClient(); err == nil {
-					if err := consumerMgr.StartConsume(m.WsConn,m.Options); err != nil {
+					if err := consumerMgr.StartConsume(m.WsConn, m.Options); err != nil {
 						scopelog.Printf(actionState, "Consumer Start err, %v\n", err)
 					} else {
 						scopelog.Printf(actionState, "Consumer Started\n")

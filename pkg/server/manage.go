@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"opcdata-predict-client/cmd/option"
+	"opcdata-predict/cmd/option"
 )
 
 type WsServer struct {

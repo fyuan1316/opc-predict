@@ -1,6 +1,6 @@
 package option
 
-import "opcdata-predict-client/pkg/scopelog"
+import "opcdata-predict/pkg/scopelog"
 
 type OptionFunc func(spec *Options)
 

@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"opcdata-predict-client/cmd/option"
-	"opcdata-predict-client/pkg/server"
+	"opcdata-predict/cmd/option"
+	"opcdata-predict/pkg/server"
 	"os"
 	"os/signal"
 )
