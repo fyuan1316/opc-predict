@@ -2,42 +2,52 @@ package predict
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"time"
 )
 
 var urlFormat = "http://%s/v1/models/m:predict"
 
-func Post(server, host, auth string, data []byte) (string, error) {
+func Post(server, host, auth string, timeout int, data []byte) (string, error) {
 
-	fmt.Println("server:", server)
-	fmt.Println("host:", host)
-	fmt.Println("auth:", auth)
+	//fmt.Println("server:", server)
+	//fmt.Println("host:", host)
+	//fmt.Println("auth:", auth)
+
+	start := time.Now()
 	predictUrl := fmt.Sprintf(urlFormat, server)
 
 	req, err := http.NewRequest("POST", predictUrl, bytes.NewBuffer(data))
 	if err != nil {
 		return "", err
 	}
+	timeoutCtx, cancelFn := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
+	defer cancelFn()
+	req = req.WithContext(timeoutCtx)
+
 	req.Host = host
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
-	log.Printf("Header Host: [%s]\n", host)
-	log.Printf("Header Authorization: [%s]\n", auth)
+	//log.Printf("Header Host: [%s]\n", host)
+	//log.Printf("Header Authorization: [%s]\n", auth)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	log.Printf("response Status: [%s]\n", resp.Status)
-	log.Printf("response Headers: [%s]\n", resp.Header)
-	log.Printf("response Body: [%s]\n", string(body))
+	//log.Printf("response Status: [%s]\n", resp.Status)
+	//log.Printf("response Headers: [%s]\n", resp.Header)
+	//log.Printf("response Body: [%s]\n", string(body))
+
+	cost := time.Now().Sub(start)
+	fmt.Printf("cost:%v\n", cost)
 	return string(body), err
 }
 

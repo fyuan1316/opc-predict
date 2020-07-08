@@ -1,5 +1,6 @@
-package main
 
+package cmd
+/*
 import (
 	"github.com/gorilla/websocket"
 )
@@ -24,17 +25,17 @@ func main() {
 	//			// Print the message to the console
 	//			fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
 	//		*/
-	//
-	//		// Write message back to browser
-	//		if err := conn.WriteMessage(msgType, msg); err != nil {
-	//			return
-	//		}
-	//	}
-	//})
-	//
-	//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	//	http.ServeFile(w, r, "websockets.html")
-	//})
-	//fmt.Println("Listening :8080")
-	//http.ListenAndServe(":8080", nil)
-}
+//
+//		// Write message back to browser
+//		if err := conn.WriteMessage(msgType, msg); err != nil {
+//			return
+//		}
+//	}
+//})
+//
+//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+//	http.ServeFile(w, r, "websockets.html")
+//})
+//fmt.Println("Listening :8080")
+//http.ListenAndServe(":8080", nil)
+//}
