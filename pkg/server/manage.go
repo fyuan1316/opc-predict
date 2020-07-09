@@ -28,11 +28,3 @@ func (s *WsServer) Boot() {
 	log.Printf("Listening :%d\n", s.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", s.Port), nil)
 }
-//
-//func (s *WsServer) Shutdown(waitSeconds int) {
-//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(waitSeconds)*time.Second)
-//	if err := s.server.Shutdown(ctx); err != nil {
-//		// handle err
-//		log.Printf("shutdown websocket server err: %v\n", err)
-//	}
-//}

@@ -47,7 +47,7 @@ func (m *WebSocketManager) WsHandler(w http.ResponseWriter, r *http.Request) {
 
 	scopelog.Printf(scopeWsHandler, "Init Websocket Connection\n")
 	consumeMgr := kafka.NewMessageCollector()
-	scopelog.Printf(scopeWsHandler, "Init Kafka Message Collector\n")
+	scopelog.Printf(scopeWsHandler, "Init Kafka Message Consumer\n")
 	m.CommandHandler(consumeMgr)
 }
 
@@ -81,7 +81,7 @@ func (m *WebSocketManager) CommandHandler(consumerMgr *kafka.MessageCollector) {
 				scopelog.Printf(actionRequest, "StartUp Kafka Consumer\n")
 				if err := consumerMgr.CreateClient(); err == nil {
 					if err := consumerMgr.StartConsume(m.WsConn, m.Options); err != nil {
-						scopelog.Printf(actionState, "Consumer Start err, %v\n", err)
+						scopelog.Printf(actionState, "Consumer StartMessageLoop err, %v\n", err)
 					} else {
 						scopelog.Printf(actionState, "Consumer Started\n")
 					}

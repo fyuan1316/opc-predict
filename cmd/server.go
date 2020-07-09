@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"opcdata-predict/cmd/option"
-	"opcdata-predict/pkg/server"
+	serverv2 "opcdata-predict/pkg/server/v2"
 	"os"
 	"os/signal"
 )
@@ -69,7 +69,8 @@ then push result to http://<ip>/echo`,
 
 		fmt.Printf("start test server\n")
 
-		wsServer := server.NewWsServer(wsPort, opts)
+		//wsServer := server.NewWsServer(wsPort, opts)
+		wsServer := serverv2.NewWsServer(wsPort, opts)
 		wsServer.Boot()
 
 		stopCh = make(chan os.Signal, 1)

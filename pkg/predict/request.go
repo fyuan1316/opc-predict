@@ -6,10 +6,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"opcdata-predict/cmd/option"
 	"time"
 )
 
 var urlFormat = "http://%s/v1/models/m:predict"
+
+type Manager struct {
+	Options option.Options
+}
+
+func NewManager(opts option.Options) *Manager {
+	return &Manager{Options: opts}
+}
+
+func (m *Manager) GetPredictedResult(originData []byte) []byte {
+	server := m.Options.PredictIp
+	host := m.Options.PredictDomain
+	auth := m.Options.PredictAuth
+	timeout := m.Options.PredictTimeout
+
+	result, err := Post(server, host, auth, timeout, originData)
+	if err != nil {
+		result = "predict error"
+	}
+	zipData := fmt.Sprintf("origin data: %s | prediction: %s", originData, result)
+
+	return []byte(zipData)
+}
 
 func Post(server, host, auth string, timeout int, data []byte) (string, error) {
 
