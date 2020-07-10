@@ -30,11 +30,11 @@ func init() {
 	startCommand.Flags().BoolVar(&saslEnable, "sasl", false, "sasl switcher")
 	startCommand.Flags().StringVar(&username, "username", "", "sasl username")
 	startCommand.Flags().StringVar(&password, "passwd", "", "sasl password")
-	startCommand.Flags().StringVar(&saslMechanism, "mechanism", "", "sasl mechanism")
+	startCommand.Flags().StringVar(&saslMechanism, "mechanism", "PLAIN", "sasl mechanism")
 	//websocket server
 	startCommand.Flags().IntVar(&wsPort, "wsport", 8080, "websocket server port")
 
-	stopCommand.Flags().IntVar(&gracefulshutdown, "after", 5, "shutdown after this seconds")
+	//stopCommand.Flags().IntVar(&gracefulshutdown, "after", 5, "shutdown after this seconds")
 
 }
 

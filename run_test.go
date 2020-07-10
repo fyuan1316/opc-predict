@@ -1,15 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"github.com/gorilla/websocket"
-	"net/http"
-	kafka2 "opcdata-predict/pkg/kafka/v2"
-	"opcdata-predict/pkg/predict"
-	server2 "opcdata-predict/pkg/server/v2"
-	"testing"
-)
-
+/*
 func Test_Run(t *testing.T) {
 
 	fmt.Println("listen :8080")
@@ -20,7 +11,7 @@ var kafkaMgr = kafka2.NewConsumerManager()
 var predictService  = predict.NewManager()
 func Start() {
 	fmt.Println("start")
-	go server2.ClientManager.StartMessageLoop()
+	go server2.ClientsManager{}.StartMessageLoop()
 	go kafkaMgr.Process(server2.ClientManager.Broadcast)
 	http.HandleFunc("/echo", myWsHandler)
 	http.ListenAndServe(":8080", nil)
@@ -50,3 +41,4 @@ func myWsHandler(w http.ResponseWriter, r *http.Request) {
 	go client.Write()
 
 }
+*/

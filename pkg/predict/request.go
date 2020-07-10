@@ -7,10 +7,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"opcdata-predict/cmd/option"
+	"opcdata-predict/pkg/scopelog"
 	"time"
 )
 
 var urlFormat = "http://%s/v1/models/m:predict"
+var scopePrediction = "Prediction"
 
 type Manager struct {
 	Options option.Options
@@ -26,21 +28,23 @@ func (m *Manager) GetPredictedResult(originData []byte) []byte {
 	auth := m.Options.PredictAuth
 	timeout := m.Options.PredictTimeout
 
-	result, err := Post(server, host, auth, timeout, originData)
+	scopelog.Printf(scopePrediction, "predict, ip:%s, host: %s, auth:%s ,timeout: %d\n", server, host, auth, timeout)
+
+	result, err := Post(server, host, auth, timeout, getPredictInputs(originData))
 	if err != nil {
 		result = "predict error"
 	}
-	zipData := fmt.Sprintf("origin data: %s | prediction: %s", originData, result)
+	zipData := fmt.Sprintf("request: %s | <br/>result: %s", originData, result)
 
 	return []byte(zipData)
 }
 
+//TODO use real data
+func getPredictInputs(originData []byte) []byte {
+	return []byte(`{"instances": [{"x1":6.2, "x2":2.2, "x3":1.1, "x4":1.2}]}`)
+}
+
 func Post(server, host, auth string, timeout int, data []byte) (string, error) {
-
-	//fmt.Println("server:", server)
-	//fmt.Println("host:", host)
-	//fmt.Println("auth:", auth)
-
 	start := time.Now()
 	predictUrl := fmt.Sprintf(urlFormat, server)
 
@@ -71,10 +75,11 @@ func Post(server, host, auth string, timeout int, data []byte) (string, error) {
 	//log.Printf("response Body: [%s]\n", string(body))
 
 	cost := time.Now().Sub(start)
-	fmt.Printf("cost:%v\n", cost)
+	scopelog.Printf(scopePrediction, "cost:%v\n", cost)
 	return string(body), err
 }
 
+/*
 type Payload struct {
 	Instances []Instances `json:"instances"`
 }
@@ -107,3 +112,4 @@ func Post2(server, host, auth string, payloadBytes []byte) (string, error) {
 	fmt.Println("response Body:", string(respBody))
 	return string(respBody), err
 }
+*/

@@ -3,12 +3,14 @@ package v2
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 	"opcdata-predict/cmd/option"
 	kafka2 "opcdata-predict/pkg/kafka/v2"
 	"opcdata-predict/pkg/predict"
+	"opcdata-predict/pkg/scopelog"
 )
+
+var wsScope = "WsServer"
 
 type WsServer struct {
 	Port    int
@@ -22,23 +24,30 @@ func NewWsServer(port int, opts option.Options) WsServer {
 	s := WsServer{}
 	s.Port = port
 	s.Options = opts
-	s.KafkaManager = kafka2.NewConsumerManager()
-	s.PredictService = predict.NewManager(s.Options)
+	s.KafkaManager = kafka2.NewConsumerManager(opts)
+	s.PredictService = predict.NewManager(opts)
 
 	return s
 }
 
 func (s *WsServer) Boot() {
 	//
-	go clientsManager.StartMessageLoop()                // multiplex sockets
+	go clientsManager.StartMessageLoop() // multiplex sockets
+	scopelog.Printf(wsScope, "ClientManagers Started")
 	go s.KafkaManager.Process(clientsManager.Broadcast) // kafka worker
+	scopelog.Printf(wsScope, "Kafka Consumer Started")
 
 	//route
+	var pageRouter, websocketRouter = "/", "/echo"
+
 	http.HandleFunc("/echo", s.myWsHandler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(pageRouter, func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "websockets.html")
 	})
-	log.Printf("Listening :%d\n", s.Port)
+	scopelog.Printf(wsScope, "Router Page registered: %v\n", pageRouter)
+	scopelog.Printf(wsScope, "Router Websocket registered: %v\n", websocketRouter)
+
+	scopelog.Printf(wsScope, "Server Started, Listen on :%d\n", s.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", s.Port), nil)
 }
 

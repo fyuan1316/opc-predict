@@ -3,6 +3,7 @@ package v2
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"opcdata-predict/pkg/scopelog"
 	"opcdata-predict/pkg/server"
 )
 
@@ -10,7 +11,6 @@ type Client struct {
 	Conn *websocket.Conn
 	Send chan []byte
 }
-
 
 /**
 将从client 读取到的消息 发送到 命令通道中，这里要识别出是否合法的命令
@@ -39,10 +39,11 @@ func (c *Client) Read(commandCh chan<- []byte) {
 	}
 }
 
-func (c *Client) Write(predictService func([]byte)[]byte) {
+func (c *Client) Write(predictService func([]byte) []byte) {
 	defer func() {
 		c.Conn.Close()
 	}()
+	var processedMsg []byte
 	for {
 		select {
 		case msg, ok := <-c.Send:
@@ -50,8 +51,11 @@ func (c *Client) Write(predictService func([]byte)[]byte) {
 				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-
-			c.Conn.WriteMessage(websocket.TextMessage, predictService(msg))
+			processedMsg = msg
+			if server.IsPureData(msg) {
+				processedMsg = predictService(msg)
+			}
+			c.Conn.WriteMessage(websocket.TextMessage, processedMsg)
 		}
 	}
 }
@@ -85,15 +89,17 @@ func (m *ClientsManager) StartMessageLoop() {
 		case conn := <-m.Register:
 			//m.lock.Lock()
 			m.Clients[conn] = true
+			scopelog.Printf(wsScope, "new client connected. total connected: %d", len(clientsManager.Clients))
 			//m.lock.Unlock()
 		case conn := <-m.Unregister:
 			//m.lock.Lock()
 			if _, ok := m.Clients[conn]; ok {
 				delete(m.Clients, conn)
+				scopelog.Printf(wsScope, "client disConnected. total connected: %d", len(clientsManager.Clients))
 			}
 			//m.lock.Unlock()
 		case msg := <-m.Broadcast:
-			fmt.Printf("ClientsManager recv: %s\n", msg)
+			//fmt.Printf("ClientsManager recv: %s\n", msg)
 			for conn := range m.Clients {
 				//connection 正常时，msg 发送回client 自己的消息chan；异常时将client 清理掉.
 				select {
@@ -104,6 +110,5 @@ func (m *ClientsManager) StartMessageLoop() {
 				}
 			}
 		}
-
 	}
 }

@@ -26,8 +26,8 @@ var (
 	saslMechanism string
 
 	//ws server
-	wsPort           int
-	gracefulshutdown int
+	wsPort int
+	//gracefulshutdown int
 )
 var stopCh chan os.Signal
 var startCommand = &cobra.Command{
@@ -67,9 +67,6 @@ then push result to http://<ip>/echo`,
 
 		opts := option.NewOptions(opFns...)
 
-		fmt.Printf("start test server\n")
-
-		//wsServer := server.NewWsServer(wsPort, opts)
 		wsServer := serverv2.NewWsServer(wsPort, opts)
 		wsServer.Boot()
 
@@ -80,16 +77,16 @@ then push result to http://<ip>/echo`,
 
 	},
 }
-var stopCommand = &cobra.Command{
-	Use:   "stop",
-	Short: "stop ws server",
-	Long:  `stop a ws server`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("stop called")
-		//TODO
-		//close(stopCh)
-	},
-}
+
+//var stopCommand = &cobra.Command{
+//	Use:   "stop",
+//	Short: "stop ws server",
+//	Long:  `stop a ws server`,
+//	Run: func(cmd *cobra.Command, args []string) {
+//		fmt.Println("stop called")
+//		//close(stopCh)
+//	},
+//}
 
 func init() {
 	rootCmd.AddCommand(startCommand)

@@ -1,11 +1,10 @@
 package v2
 
 import (
-	"fmt"
 	"github.com/Shopify/sarama"
 	"opcdata-predict/cmd/option"
-	"opcdata-predict/pkg/predict"
 	"opcdata-predict/pkg/scopelog"
+	"opcdata-predict/pkg/server"
 	"strings"
 	"sync"
 	"time"
@@ -24,12 +23,18 @@ type KafkaConsumer struct {
 	Options option.Options
 }
 
-func NewKafkaConsumer() *KafkaConsumer {
+func NewKafkaConsumer(opts option.Options) *KafkaConsumer {
 	c := &KafkaConsumer{}
-	c.Brokers = "localhost:9092"
-	c.Topic = "test"
-	c.Partition = 0
+	c.Brokers = opts.Brokers     //"localhost:9092"
+	c.Topic = opts.Topic         //"test"
+	c.Partition = opts.Partition // 0
 	c.Config = sarama.NewConfig()
+	if opts.SaslEnable {
+		c.Config.Net.SASL.Enable = true
+		c.Config.Net.SASL.User = opts.SaslUsername
+		c.Config.Net.SASL.Password = opts.SaslPassword
+		c.Config.Net.SASL.Mechanism = sarama.SASLMechanism(opts.SaslMechanism)
+	}
 	c.StopCh = make(chan struct{})
 	return c
 }
@@ -39,13 +44,15 @@ var (
 	scopeConsumer = "Consumer"
 )
 
+//TODO use sarama.OffsetOldest
+var beginOffset = sarama.OffsetOldest //565
+
 func (c *KafkaConsumer) CreateClient() error {
 	var client sarama.Client
 	var err error
 	doOnce.Do(func() {
 		client, err = sarama.NewClient(strings.Split(c.Brokers, ","), c.Config)
-		//p := sarama.OffsetOldest
-		p := int64(565)
+		p := int64(beginOffset)
 		c.Offset = &p
 	})
 	if err != nil {
@@ -65,10 +72,13 @@ func (c *KafkaConsumer) Run(dataCh chan<- []byte) error {
 	var client sarama.Client
 	var err error
 	//doOnce.Do(func() {
-		client, err = sarama.NewClient(strings.Split(c.Brokers, ","), c.Config)
-		//p := sarama.OffsetOldest
-		p := int64(565)
-		c.Offset = &p
+	client, err = sarama.NewClient(strings.Split(c.Brokers, ","), c.Config)
+	if err != nil {
+		return err
+	}
+	//p := sarama.OffsetOldest
+	p := int64(beginOffset)
+	c.Offset = &p
 	//})
 
 	c.Client = client
@@ -85,32 +95,11 @@ func (c *KafkaConsumer) Run(dataCh chan<- []byte) error {
 			if replay := c.consume(consumer, dataCh); !replay {
 				break
 			}
-			fmt.Println("replay")
+			scopelog.Printf(scopeConsumer, "replay")
 		}
 	}()
 	return nil
 }
-
-//
-//func (c *KafkaConsumer) StartConsume(wsConn *websocket.Conn, opts option.Options) error {
-//	c.Options = opts
-//	consumer, err := sarama.NewConsumerFromClient(c.Client)
-//	if err != nil {
-//		return err
-//	}
-//	//if c.StopCh == nil {
-//	c.StopCh = make(chan struct{})
-//	//}
-//	go func() {
-//		for {
-//			if replay := c.consume(consumer, wsConn); !replay {
-//				break
-//			}
-//			fmt.Println("replay")
-//		}
-//	}()
-//	return nil
-//}
 
 func (c *KafkaConsumer) getOffset() int64 {
 	if c.isReplay {
@@ -126,6 +115,7 @@ func (c *KafkaConsumer) consume(consumer sarama.Consumer, dataCh chan<- []byte) 
 	partitionConsumer, err := consumer.ConsumePartition(c.Topic, int32(c.Partition), c.getOffset())
 	if err != nil {
 		scopelog.Printf(scopeConsumer, "Get ConsumePartition err:%v\n", err)
+		dataCh <- []byte(server.CommandPrefix + err.Error())
 		return false
 	}
 	defer partitionConsumer.Close()
@@ -141,24 +131,9 @@ func (c *KafkaConsumer) consume(consumer sarama.Consumer, dataCh chan<- []byte) 
 
 			lastReceivedMsgTime = time.Now()
 			scopelog.Printf(scopeConsumer, "offset: [%d], message: [%s],  lastReceivedMsgTime:%v\n", msg.Offset, msg.Value, lastReceivedMsgTime)
-			scopelog.Printf(scopeConsumer, "predict, ip:%s, host: %s, auth:%s ,timeout: %d\n", c.Options.PredictIp, c.Options.PredictDomain, c.Options.PredictAuth, c.Options.PredictTimeout)
-			//TODO remove, just for test
-			data := []byte(`{"instances": [{"x1":6.2, "x2":2.2, "x3":1.1, "x4":1.2}]}`)
-
-			result, err := predict.Post(c.Options.PredictIp,
-				c.Options.PredictDomain,
-				c.Options.PredictAuth,
-				c.Options.PredictTimeout,
-				data)
-			if err != nil {
-				result = "predict error"
-			}
-			zipData := fmt.Sprintf("origin data: %s | prediction: %s", msg.Value, result)
-			//_ = wsConn.WriteMessage(websocket.TextMessage, msg.Value)
-			dataCh <- []byte(zipData)
-
+			dataCh <- msg.Value
 		case <-ticker.C:
-			fmt.Printf("check if replay from oldest, lastTime:%v, 时间差: %v\n", lastReceivedMsgTime, time.Now().Sub(lastReceivedMsgTime))
+			scopelog.Printf(scopeConsumer, "check if replay from oldest, lastTime:%v, 时间差: %v\n", lastReceivedMsgTime, time.Now().Sub(lastReceivedMsgTime))
 			if time.Now().After(lastReceivedMsgTime.Add(time.Minute)) {
 				c.isReplay = true
 				return true

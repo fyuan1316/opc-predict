@@ -22,7 +22,7 @@ type Options struct {
 	WsPort int
 }
 
-const MinTimeout = 200 // the unit is milliseconds
+const MinTimeout = 500 // the unit is milliseconds
 
 func SetWsPort(p int) OptionFunc {
 	return func(spec *Options) {
