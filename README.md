@@ -29,6 +29,6 @@ wc -c wscat -c ws://172.27.0.5:9000/echo
 
 ## 结合数据生成程序一起使用
 ```bash
-java -Djava.security.auth.login.config=/opt/tbds/kafka/config/kafka_client_for_ranger_jaas.conf -jar simpleclient-4.3.0-1075.jar --topic testfy --protocol SASL_PLAINTEXT
+java -Djava.security.auth.login.config=/opt/tbds/kafka/config/kafka_client_for_ranger_jaas.conf -jar opc-data-collector.jar --topic testfy --protocol SASL_PLAINTEXT
 
 ```
